@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>塔罗牌测算（完整版）</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fdf6f0;
+      padding: 20px;
+      text-align: center;
+    }
+    .card {
+      display: inline-block;
+      margin: 10px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      padding: 10px;
+      width: 200px;
+      cursor: pointer;
+    }
+    .card img {
+      width: 100%;
+      border-radius: 6px;
+    }
+    .explanation {
+      display: none;
+      text-align: left;
+      font-size: 14px;
+      margin-top: 10px;
+      color: #333;
+    }
+    input, select, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>塔罗牌测算</h1>
+  <p>请输入你心中的问题（支持多个问题，用逗号隔开）：</p>
+  <input type="text" id="userQuestion" placeholder="比如：我该换工作吗，我的感情怎么样？" style="width:90%;">
+  <br>
+  <button onclick="drawCustomCards()">开始测算</button>
+  <div id="result" style="margin-top: 30px;"></div>
+
+  <script>
+    const cards = [
+      { name: "愚者", img: "https://upload.wikimedia.org/wikipedia/en/9/90/RWS_Tarot_00_Fool.jpg", meaning: "新的开始，冒险，潜力", reversed: "愚蠢，冲动，缺乏方向" },
+      { name: "魔术师", img: "https://upload.wikimedia.org/wikipedia/en/d/de/RWS_Tarot_01_Magician.jpg", meaning: "创造力，行动力，能力", reversed: "操控，欺骗，犹豫" },
+      { name: "女祭司", img: "https://upload.wikimedia.org/wikipedia/en/8/88/RWS_Tarot_02_High_Priestess.jpg", meaning: "直觉，潜意识，神秘", reversed: "秘密被揭露，误导" },
+      { name: "皇后", img: "https://upload.wikimedia.org/wikipedia/en/d/d2/RWS_Tarot_03_Empress.jpg", meaning: "丰饶，关爱，自然", reversed: "依赖，缺乏成长" },
+      { name: "皇帝", img: "https://upload.wikimedia.org/wikipedia/en/c/c3/RWS_Tarot_04_Emperor.jpg", meaning: "权威，结构，掌控", reversed: "专制，控制欲强" },
+      { name: "教皇", img: "https://upload.wikimedia.org/wikipedia/en/8/8d/RWS_Tarot_05_Hierophant.jpg", meaning: "传统，精神，引导", reversed: "教条，叛逆" },
+      { name: "恋人", img: "https://upload.wikimedia.org/wikipedia/en/d/db/RWS_Tarot_06_Lovers.jpg", meaning: "爱情，和谐，抉择", reversed: "分裂，不忠" },
+      { name: "战车", img: "https://upload.wikimedia.org/wikipedia/en/3/3a/The_Chariot.jpg", meaning: "意志力，胜利，掌控", reversed: "方向混乱，失败" },
+      { name: "力量", img: "https://upload.wikimedia.org/wikipedia/en/f/f5/RWS_Tarot_08_Strength.jpg", meaning: "勇气，自律，掌控", reversed: "不安，压抑" },
+      { name: "隐者", img: "https://upload.wikimedia.org/wikipedia/en/4/4d/RWS_Tarot_09_Hermit.jpg", meaning: "内省，智慧，寻找", reversed: "孤独，隔离" },
+      { name: "命运之轮", img: "https://upload.wikimedia.org/wikipedia/en/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg", meaning: "命运，转变，循环", reversed: "厄运，阻碍" },
+      { name: "正义", img: "https://upload.wikimedia.org/wikipedia/en/e/e0/RWS_Tarot_11_Justice.jpg", meaning: "公平，真相，责任", reversed: "不公，偏见" },
+      { name: "倒吊人", img: "https://upload.wikimedia.org/wikipedia/en/d/d4/RWS_Tarot_12_Hanged_Man.jpg", meaning: "牺牲，顿悟，暂停", reversed: "拖延，抗拒" },
+      { name: "死神", img: "https://upload.wikimedia.org/wikipedia/en/d/d7/RWS_Tarot_13_Death.jpg", meaning: "转变，结束，重生", reversed: "停滞，害怕改变" },
+      { name: "节制", img: "https://upload.wikimedia.org/wikipedia/en/f/f8/RWS_Tarot_14_Temperance.jpg", meaning: "平衡，节制，和谐", reversed: "失衡，极端" },
+      { name: "恶魔", img: "https://upload.wikimedia.org/wikipedia/en/9/96/The_Devil.jpg", meaning: "诱惑，束缚，欲望", reversed: "摆脱束缚，自由" },
+      { name: "高塔", img: "https://upload.wikimedia.org/wikipedia/en/5/53/RWS_Tarot_16_Tower.jpg", meaning: "崩溃，觉醒，剧变", reversed: "灾难避免，压抑" },
+      { name: "星星", img: "https://upload.wikimedia.org/wikipedia/en/d/db/RWS_Tarot_17_Star.jpg", meaning: "希望，灵感，治愈", reversed: "失望，迷失" },
+      { name: "月亮", img: "https://upload.wikimedia.org/wikipedia/en/7/7f/RWS_Tarot_18_Moon.jpg", meaning: "幻象，情绪，直觉", reversed: "真相揭露，清醒" },
+      { name: "太阳", img: "https://upload.wikimedia.org/wikipedia/en/1/17/RWS_Tarot_19_Sun.jpg", meaning: "快乐，成功，活力", reversed: "自负，短暂幸福" },
+      { name: "审判", img: "https://upload.wikimedia.org/wikipedia/en/d/dd/RWS_Tarot_20_Judgement.jpg", meaning: "觉醒，救赎，评估", reversed: "否认，犹豫" },
+      { name: "世界", img: "https://upload.wikimedia.org/wikipedia/en/f/ff/RWS_Tarot_21_World.jpg", meaning: "完成，整合，旅行", reversed: "未完成，停滞" }
+    ];
+
+    function explainMeaning(meaning, reversed, question) {
+      const keywords = (reversed ? reversed : meaning).split('，');
+      return keywords.map(k => {
+        return `“${k}”意味着在你提到的问题「${question}」中，可能暗示：` +
+               (k.includes('失败') || k.includes('危机') ? `注意挑战，需谨慎前行。` :
+                k.includes('机会') || k.includes('希望') ? `这是积极的信号，鼓励你把握当前时机。` :
+                k.includes('改变') || k.includes('抉择') ? `你正在经历转变期，需认真思考。` :
+                `这对你的问题是一个重要提示，建议你深入体会其含义。`);
+      }).join('<br>');
+    }
+
+    function drawCustomCards() {
+      const container = document.getElementById("result");
+      container.innerHTML = "";
+      const questions = document.getElementById("userQuestion").value.split(/[,，、]/).map(q => q.trim()).filter(Boolean);
+
+      questions.forEach((question, index) => {
+        const shuffled = [...cards].sort(() => 0.5 - Math.random()).slice(0, 3);
+        const section = document.createElement("div");
+        section.innerHTML = `<h2>问题 ${index + 1}：${question}</h2>`;
+        shuffled.forEach(card => {
+          const isReversed = Math.random() < 0.5;
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `
+            <img src="${card.img}" alt="${card.name}">
+            <h3>${card.name} ${isReversed ? '（逆位）' : '（正位）'}</h3>
+            <div class="explanation">${explainMeaning(card.meaning, isReversed ? card.reversed : null, question)}</div>
+          `;
+          div.onclick = () => {
+            const exp = div.querySelector(".explanation");
+            exp.style.display = exp.style.display === "none" ? "block" : "none";
+          };
+          section.appendChild(div);
+        });
+        container.appendChild(section);
+      });
+    }
+  </script>
+</body>
+</html>
